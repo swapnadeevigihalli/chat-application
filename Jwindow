@@ -1,0 +1,1600 @@
+package assgn1;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+import java.util.List.*;
+import java.util.Vector ;
+import java.net.*;
+import java.applet.*;
+
+
+public class Jwindow
+    extends Frame
+    implements ActionListener, ItemListener, KeyListener, MouseListener, 
+	       WindowListener
+{
+    public static final String version = "v1.2"; 
+    public String name = new String("");
+    public String location = new String("");
+    public String host = new String("localhost");
+    public String port = new String("12468");
+    public String whofor = new String("ALL");
+    public String whofrom = name;
+    public int portnumber = 12468;
+    public String additional = new String();
+    public String drawfont;
+    public int drawsize;
+    public int drawstyle;
+    public String drawtext;
+    public URL OTFURL;
+    protected String buffer;
+    protected int OverallSizex;
+    protected int OverallSizey;
+
+    public GridBagLayout mylayout = new GridBagLayout();
+    public GridBagConstraints myconstraints = new GridBagConstraints();
+
+    // socket stuff
+
+    public OTFclient myclient;
+    protected boolean connected;
+
+    // the menu items
+
+    public MenuItem connect;
+    public MenuItem disconnect;
+    protected MenuItem buggeroff;
+    protected Menu connections;
+    protected MenuItem menupage;
+    protected MenuItem menuleavemess;
+    protected MenuItem menuviewmess;
+    protected MenuItem menuclear;
+    protected Menu actions;
+    protected MenuItem copy;
+    protected MenuItem paste;
+    protected Menu edit; 
+    protected MenuItem settings;
+    protected MenuItem viewadditional;
+    protected MenuItem hidecanvas;
+    protected MenuItem showcanvas;
+    protected MenuItem hidemessages;
+    protected MenuItem showmessages;
+    protected Menu view;
+    protected MenuItem manual;
+    protected MenuItem about;
+    protected Menu help;
+ 
+    // panel 1
+
+    protected Label sendline;
+    protected Label conference;
+    protected TextField typed;
+    protected TextArea messages;
+
+    // panel 2
+
+    protected Label drawcanvas;
+    public Jcanvas canvas;
+
+    // panel 3
+
+    protected Choice filltype;
+    protected Choice colorchoice;
+    protected Label drawingcolor;
+    protected Checkbox freehand;
+    protected Checkbox line;
+    protected Checkbox oval;
+    protected Checkbox rectangle;
+    protected Checkbox text;
+    protected CheckboxGroup drawtype;
+
+    // panel 4
+
+    protected Label namelabel;
+    public Label userid;
+    protected Label sendtolabel;
+    public List sendto;
+    protected Button whosthis;
+    protected Button page;
+    protected Button message;
+    protected Button readmess;
+    protected Button clearcanvas;
+
+    protected Panel p1;
+    protected Panel p2;
+
+    // set up
+
+    public Jwindow(String userName, String hostName, String portName,
+			 boolean autoConnect, URL myURL)
+    {
+	super();
+
+	// Set the username, host, and port values if they've been specified
+	if ((userName != null) && (!userName.equals("")))
+	    this.name = userName;
+	if ((hostName != null) && (!hostName.equals("")))
+	    this.host = hostName;
+	if ((portName != null) && (!portName.equals("")))
+	    this.port = portName;
+
+	// Get the URL of the current directory, so that we can find the
+	// rest of our files.
+	OTFURL = myURL;
+
+	// set background color
+
+	Color mycolor = Color.white;
+	this.setBackground(mycolor);
+	this.connected = false;
+
+	// set default font
+
+	drawfont = "Helvetica";
+	drawstyle = Font.PLAIN;
+	drawsize = 10;
+
+	OverallSizex = 600;
+	OverallSizey = 400;
+	this.setSize(OverallSizex,OverallSizey);
+	myconstraints.fill = myconstraints.BOTH;
+
+	// set up all of the window crap
+
+	this.setLayout(mylayout);
+	myconstraints.insets = new Insets(0,5,0,5);
+
+	// the menu bar
+
+	connect = new MenuItem("Connect");
+	connect.addActionListener(this);
+	connect.setEnabled(true);
+
+	disconnect = new MenuItem("Disconnect");
+	disconnect.addActionListener(this);
+	disconnect.setEnabled(false);
+
+	buggeroff = new MenuItem("Bugger off");
+	buggeroff.addActionListener(this);
+	buggeroff.setEnabled(true);
+
+	connections = new Menu("Connections");
+	connections.add(connect);
+	connections.add(disconnect);
+	connections.add(buggeroff);
+
+	menupage = new MenuItem("Page user(s)");
+	menupage.addActionListener(this);
+	menupage.setEnabled(false);
+
+	menuleavemess = new MenuItem("Leave message");
+	menuleavemess.addActionListener(this);
+	menuleavemess.setEnabled(false);
+
+	menuviewmess = new MenuItem("Read message(s)");
+	menuviewmess.addActionListener(this);
+	menuviewmess.setEnabled(false);
+
+	menuclear = new MenuItem("Clear canvas");
+	menuclear.addActionListener(this);
+	menuclear.setEnabled(true);
+
+	actions = new Menu("Actions");
+	actions.add(menupage);
+	actions.add(menuleavemess);
+	actions.add(menuviewmess);
+	actions.add(menuclear);
+
+	copy = new MenuItem("Copy");
+	copy.addActionListener(this);
+	copy.setEnabled(true);
+
+	paste = new MenuItem("Paste");
+	paste.addActionListener(this);
+	paste.setEnabled(false);
+
+	edit = new Menu("Edit");
+	edit.add(copy);
+	edit.add(paste);
+
+	settings = new MenuItem("Settings");
+	settings.addActionListener(this);
+	settings.setEnabled(true);
+
+	viewadditional = new MenuItem("View user's info");
+	viewadditional.addActionListener(this);
+	viewadditional.setEnabled(false);
+
+	hidecanvas = new MenuItem("Hide drawing canvas");
+	hidecanvas.addActionListener(this);
+	hidecanvas.setEnabled(true);
+
+	showcanvas = new MenuItem("Show drawing canvas");
+	showcanvas.addActionListener(this);
+	showcanvas.setEnabled(false);
+
+	hidemessages = new MenuItem("Hide conference (chat) text");
+	hidemessages.addActionListener(this);
+	hidemessages.setEnabled(true);
+
+	showmessages = new MenuItem("Show conference (chat) text");
+	showmessages.addActionListener(this);
+	showmessages.setEnabled(false);
+
+	view = new Menu("View");
+	view.add(settings);
+	view.add(viewadditional);
+	view.add(hidecanvas);
+	view.add(showcanvas);
+	view.add(hidemessages);
+	view.add(showmessages);
+
+	manual = new MenuItem("About OTF");
+	manual.addActionListener(this);
+	manual.setEnabled(true);
+
+	/*about = new MenuItem("About OTF");
+	about.addActionListener(this);
+	about.setEnabled(true);*/
+
+	help = new Menu("Help");
+	help.add(manual);
+	//help.add(about);
+
+	MenuBar menubar = new MenuBar();
+	menubar.add(connections);
+	menubar.add(actions);
+	menubar.add(edit);
+	menubar.add(view);
+	menubar.add(help);
+	menubar.setHelpMenu(help);
+	this.setMenuBar(menubar);
+
+	// the first (biggest) panel
+
+	p1 = new Panel();
+	p1.setLayout(mylayout);
+
+	sendline = new Label("Text lines to send:");
+	myconstraints.gridx = 1; myconstraints.gridy = 1;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.WEST;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0; myconstraints.weighty = 0;
+	mylayout.setConstraints(sendline, myconstraints);
+	p1.add(sendline);
+
+	typed = new TextField(50);
+	typed.addKeyListener(this);
+	myconstraints.gridx = 1; myconstraints.gridy = 2;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 1; myconstraints.weighty = 0;
+	mylayout.setConstraints(typed, myconstraints);
+	p1.add(typed);
+
+	conference = new Label("Conference text:");
+	myconstraints.gridx = 1; myconstraints.gridy = 3;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.WEST;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0; myconstraints.weighty = 0;
+	mylayout.setConstraints(conference, myconstraints);
+	p1.add(conference);
+
+	messages = new TextArea(10,50);
+	messages.setEditable(false);
+	myconstraints.gridx = 1; myconstraints.gridy = 4;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 1; myconstraints.weighty = 1;
+	mylayout.setConstraints(messages, myconstraints);
+	p1.add(messages);
+
+	drawcanvas = new Label("Drawing canvas");
+	myconstraints.gridx = 1; myconstraints.gridy = 5;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.WEST;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0; myconstraints.weighty = 0;
+	mylayout.setConstraints(drawcanvas, myconstraints);
+	p1.add(drawcanvas);
+
+	canvas = new Jcanvas(this);
+	myconstraints.gridx = 1; myconstraints.gridy = 6;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.anchor = myconstraints.WEST;
+	myconstraints.insets.top = 5; myconstraints.insets.bottom = 5;
+	myconstraints.insets.right = 5; myconstraints.insets.left = 5;
+	myconstraints.weightx = 1; myconstraints.weighty = 2;
+	mylayout.setConstraints(canvas, myconstraints);
+	p1.add(canvas);
+
+	myconstraints.gridx = 1; myconstraints.gridy = 1;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.NORTHWEST;  
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 1; myconstraints.weighty = 1;
+	mylayout.setConstraints(p1, myconstraints);
+	this.add(p1);
+
+	try {
+	    // messages.append(OTFURL.getProtocol() + "\n");
+	    // messages.append(OTFURL.getHost() + "\n");
+	    // messages.append(OTFURL.getFile() + "OTFpic.jpg\n");
+	    URL imageUrl =
+		new URL(OTFURL.getProtocol(), OTFURL.getHost(),
+		OTFURL.getFile() + "OTFpic.jpg");
+	    Image image = getToolkit().getImage(imageUrl);
+	    this.canvas.setimage(image);
+	}
+	catch (Exception e) { 
+	    System.out.println(e);
+	}
+
+	// the second (right side) panel
+
+	p2 = new Panel();
+	p2.setLayout(mylayout);
+	myconstraints.insets.top = 0; myconstraints.insets.bottom = 0;
+	myconstraints.insets.right = 5; myconstraints.insets.left = 5;
+
+	namelabel = new Label("User name:");
+	myconstraints.gridx = 1; myconstraints.gridy = 1;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.WEST;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(namelabel, myconstraints);
+	p2.add(namelabel);
+
+	userid = new Label(name);
+	myconstraints.gridx = 1; myconstraints.gridy = 2;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.WEST;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(userid, myconstraints);
+	p2.add(userid);
+
+	sendtolabel = new Label("Currently sending to:");
+	myconstraints.gridx = 1; myconstraints.gridy = 3;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.WEST;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(sendtolabel, myconstraints);
+	p2.add(sendtolabel);
+
+	sendto = new List();
+	sendto.addItemListener(this);
+	sendto.addItem("Everyone");
+	sendto.setMultipleMode(false);
+	sendto.select(0);
+	myconstraints.gridx = 1; myconstraints.gridy = 4;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.CENTER;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0; myconstraints.weighty = 1;
+	mylayout.setConstraints(sendto, myconstraints);
+	p2.add(sendto);
+
+	whosthis = new Button("Who's this?");
+	whosthis.addActionListener(this);
+	whosthis.setEnabled(false);
+	myconstraints.gridx = 1; myconstraints.gridy = 5;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.CENTER;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(whosthis, myconstraints);
+	p2.add(whosthis);
+
+	page = new Button("Page user(s)");
+	page.addActionListener(this);
+	page.setEnabled(false);
+	myconstraints.gridx = 1; myconstraints.gridy = 6;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.CENTER;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(page, myconstraints);
+	p2.add(page);
+
+	message = new Button("Leave message");
+	message.addActionListener(this);
+	message.setEnabled(false);
+	myconstraints.gridx = 1; myconstraints.gridy = 7;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.CENTER;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(message, myconstraints);
+	p2.add(message);
+
+	readmess = new Button("Read message(s)");
+	readmess.addActionListener(this);
+	readmess.setEnabled(false);
+	myconstraints.gridx = 1; myconstraints.gridy = 8;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.CENTER;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(readmess, myconstraints);
+	p2.add(readmess);
+
+	clearcanvas = new Button("Clear canvas");
+	clearcanvas.addActionListener(this);
+	clearcanvas.setEnabled(true);
+	myconstraints.gridx = 1; myconstraints.gridy = 9;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.CENTER;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(clearcanvas, myconstraints);
+	p2.add(clearcanvas);
+
+	drawingcolor = new Label("Drawing color:");
+	myconstraints.gridx = 1; myconstraints.gridy = 10;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.WEST;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(drawingcolor, myconstraints);
+	p2.add(drawingcolor);
+
+	colorchoice = new Choice();
+	colorchoice.addItemListener(this);
+	colorchoice.addItem("Black");
+	colorchoice.addItem("Blue");
+	colorchoice.addItem("Cyan");
+	colorchoice.addItem("Dark Gray");
+	colorchoice.addItem("Gray");
+	colorchoice.addItem("Green");
+	colorchoice.addItem("Light Gray");
+	colorchoice.addItem("Magenta");
+	colorchoice.addItem("Orange");
+	colorchoice.addItem("Pink");
+	colorchoice.addItem("Red");
+	colorchoice.addItem("White");
+	colorchoice.addItem("Yellow");
+	myconstraints.gridx = 1; myconstraints.gridy = 11;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.CENTER;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(colorchoice, myconstraints);
+	p2.add(colorchoice);
+
+	filltype = new Choice();
+	filltype.addItemListener(this);
+	filltype.addItem("Outline");
+	filltype.addItem("Filled");
+	myconstraints.gridx = 1; myconstraints.gridy = 12;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.CENTER;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(filltype, myconstraints);
+	p2.add(filltype);
+	filltype.setEnabled(false);
+
+	drawtype = new CheckboxGroup();
+
+	freehand = new Checkbox("Draw freehand",drawtype,true);
+	freehand.addItemListener(this);
+	myconstraints.gridx = 1; myconstraints.gridy = 13;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.WEST;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(freehand, myconstraints);
+	p2.add(freehand);
+
+	line = new Checkbox("Line",drawtype,false);
+	line.addItemListener(this);
+	myconstraints.gridx = 1; myconstraints.gridy = 14;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.WEST;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(line, myconstraints);
+	p2.add(line);
+
+	oval = new Checkbox("Oval",drawtype,false);
+	oval.addItemListener(this);
+	myconstraints.gridx = 1; myconstraints.gridy = 15;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.WEST;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(oval, myconstraints);
+	p2.add(oval);
+
+	rectangle = new Checkbox("Rectangle",drawtype,false);
+	rectangle.addItemListener(this);
+	myconstraints.gridx = 1; myconstraints.gridy = 16;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.WEST;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(rectangle, myconstraints);
+	p2.add(rectangle);
+
+	text = new Checkbox("Text",drawtype,false);
+	text.addItemListener(this);
+	myconstraints.gridx = 1; myconstraints.gridy = 17;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.anchor = myconstraints.WEST;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(text, myconstraints);
+	p2.add(text);
+                                                
+	myconstraints.gridx = 2; myconstraints.gridy = 1;
+	myconstraints.gridheight = 1; myconstraints.gridwidth = 1;
+	myconstraints.fill = myconstraints.BOTH;
+	myconstraints.weightx = 0.0; myconstraints.weighty = 0.0;
+	mylayout.setConstraints(p2, myconstraints);
+	this.add(p2);
+
+	// register to receive the various events
+	addKeyListener(this);
+	addMouseListener(this);
+	addWindowListener(this);
+
+	// show the window and get going
+
+	this.pack();
+	this.setVisible(true);
+	this.offline();
+	typed.requestFocus();
+
+	// Finally, are we supposed to attempt an automatic connection?
+	if (autoConnect == true)
+	    this.connect();
+    }
+
+
+    public void incoming(String instring)
+    { 
+	if (instring == null) return;
+
+	String printstring = new String();
+	int count = 0;
+
+	if (instring.startsWith("/FROM "))
+	    {
+		instring = instring.substring(6);
+		this.whofrom = "";
+
+		// Get who the message/command is from
+		for ( count = 0; instring.charAt(count) != ' '; count ++)
+		    whofrom += instring.charAt(count);
+		instring = instring.substring(count + 1);
+
+		// if the message is from me, skip it
+		if (this.whofrom.equals(this.name)) return;
+
+
+		if (instring.startsWith("/TO "))
+		    {
+			instring = instring.substring(4);
+
+			// Get the part about whom the message is for,
+			// and discard it.  Only the server needs it.
+			for (count = 0; instring.charAt(count) != ' ';
+			     count++);
+			instring = instring.substring(count + 1);
+		    }
+
+		if (instring.startsWith("/CLEARCANVAS"))
+		    {
+			messages.append("<<" + whofrom 
+					    + " cleared the canvas>>\n");
+			this.canvas.graphics = new Vector();
+			this.canvas.repaint();
+			return;
+		    }
+
+		if (instring.startsWith("/TEXT "))
+		    {
+
+			instring = instring.substring(6);
+
+			for (count = 0; count < instring.length(); count++)
+			    {
+				printstring += instring.charAt(count);
+			    }
+
+			if (printstring.equals(""))
+			    {
+				messages.append("\n");
+				return;
+			    }
+
+			printstring = this.whofrom + "> ";
+			printstring += instring;
+
+			messages.append(printstring);
+			messages.append("\n");
+			return;
+		    }
+
+		if (instring.startsWith("/PAGE"))
+		    {
+			messages.append("<<" + this.whofrom 
+					    + " is paging you>>\n");
+			
+			try {
+			    Applet ap = new Applet();
+			    ap.init();
+			    ap.play(OTFURL, "OTFpage.au");
+			}
+			catch (Exception argh) { 
+			    System.out.print(
+				     "Can't play sound OTFpage.au (");
+			    System.out.print(argh);
+			    System.out.println(")");
+			}
+			   
+			return;
+		    }
+
+
+		// if it's not that stuff, then it must be drawing stuff
+
+
+		String color = new String();
+		String number = new String();
+		String font = new String();
+		String text = new String();
+
+		Color drawcolor = Color.black;
+		Font drawfont = new Font("Helvetica", Font.PLAIN, 10);
+		int startx = 0;
+		int starty = 0;
+		int paramx = 0;
+		int paramy = 0;
+		int size = 0;
+		int style = 0;
+		boolean filled = false;
+
+
+		if ((instring.startsWith("/LINE ")) ||
+		    (instring.startsWith("/RECT ")) ||
+		    (instring.startsWith("/OVAL ")))
+		    {
+			String origstring = new String();
+			origstring = instring;
+			instring = instring.substring(6);
+
+			// get the color
+			color = "";
+			for (count = 0; ((count < instring.length()) &&
+				 (instring.charAt(count) != ' ')); count++)
+			    color += instring.charAt(count);
+			instring = instring.substring(count);
+
+			drawcolor = canvas.parseColorString(color);
+
+			// Discard 1 space character
+			instring = instring.substring(1);
+
+
+			// get the starting x coordinate
+			    
+			for (count = 0; ((count < instring.length()) &&
+				 (instring.charAt(count) == ' ')); count ++);
+			instring = instring.substring(count);
+
+			number = "";
+			for (count = 0; ((count < instring.length()) &&
+				 (instring.charAt(count) != ' ')); count++)
+			    number += instring.charAt(count);
+			instring = instring.substring(count);
+
+			try {
+			    startx = (int) Integer.parseInt(number); 
+			} 
+			catch (NumberFormatException e) {;}
+
+			// Discard 1 space character
+			instring = instring.substring(1);
+
+
+			// get the starting y coordinate
+
+			number = "";
+			for (count = 0; ((count < instring.length()) &&
+				 (instring.charAt(count) != ' ')); count++)
+			    number += instring.charAt(count);
+			instring = instring.substring(count);
+
+			try {
+			    starty = (int) Integer.parseInt(number); 
+			} 
+			catch (NumberFormatException e) {;}
+
+			// Discard 1 space character
+			instring = instring.substring(1);
+
+
+			// get the ending x coordinate or width
+
+			number = "";
+			for (count = 0; ((count < instring.length()) &&
+				 (instring.charAt(count) != ' ')); count++)
+			    number += instring.charAt(count);
+			instring = instring.substring(count);
+
+			try {
+			    paramx = (int) Integer.parseInt(number); 
+			} 
+			catch (NumberFormatException e) {;}
+
+			// Discard 1 space character
+			instring = instring.substring(1);
+
+
+			// get the ending y coordinate or height
+
+			number = "";
+			for (count = 0; ((count < instring.length()) &&
+				 (instring.charAt(count) != ' ')); count++)
+			    number += instring.charAt(count);
+			instring = instring.substring(count);
+
+			try {
+			    paramy = (int) Integer.parseInt(number); 
+			} 
+			catch (NumberFormatException e) {;}
+
+
+			// Now draw the item
+
+			if (origstring.startsWith("/LINE "))
+			    canvas.drawline(drawcolor, startx, starty, paramx,
+					    paramy);
+			else
+			    {
+				// Discard 1 space character
+				instring = instring.substring(1);
+
+				// get whether it's filled
+				if (instring.startsWith("true"))
+				    filled = true;
+				else filled = false;
+
+				if (origstring.startsWith("/RECT "))
+				    canvas.drawrect(drawcolor, startx,
+					    starty, paramx, paramy, filled);
+				
+				else if (origstring.startsWith("/OVAL "))
+				    canvas.drawoval(drawcolor, startx,
+					    starty, paramx, paramy, filled);
+			    }
+		    }
+
+		else if (instring.startsWith("/FONT "))
+		    {
+			instring = instring.substring(6);
+
+			// get the color
+			color = "";
+			for (count = 0; ((count < instring.length()) &&
+				 (instring.charAt(count) != ' ')); count++)
+			    color += instring.charAt(count);
+			instring = instring.substring(count);
+
+			drawcolor = canvas.parseColorString(color);
+
+			// Discard 1 space character
+			instring = instring.substring(1);
+
+
+			// get the font
+
+			font = "";
+			for (count = 0; ((count < instring.length()) &&
+				 (instring.charAt(count) != ' ')); count++)
+			    font += instring.charAt(count);
+			instring = instring.substring(count);
+
+			// Discard 1 space character
+			instring = instring.substring(1);
+
+
+			// get the starting x coordinate
+
+			number = "";
+			for (count = 0; ((count < instring.length()) &&
+				 (instring.charAt(count) != ' ')); count++)
+			    number += instring.charAt(count);
+			instring = instring.substring(count);
+
+			try {
+			    startx = (int) Integer.parseInt(number); 
+			} 
+			catch (NumberFormatException e) {;}
+
+			// Discard 1 space character
+			instring = instring.substring(1);
+
+
+			// get the starting y coordinate
+
+			number = "";
+			for (count = 0; ((count < instring.length()) &&
+				 (instring.charAt(count) != ' ')); count++)
+			    number += instring.charAt(count);
+			instring = instring.substring(count);
+
+			try {
+			    starty = (int) Integer.parseInt(number); 
+			} 
+			catch (NumberFormatException e) {;}
+
+			// Discard 1 space character
+			instring = instring.substring(1);
+
+
+			// get the size
+
+			number = "";
+			for (count = 0; ((count < instring.length()) &&
+				 (instring.charAt(count) != ' ')); count++)
+			    number += instring.charAt(count);
+			instring = instring.substring(count);
+
+			try {
+			    size = (int) Integer.parseInt(number); 
+			} 
+			catch (NumberFormatException e) {;}
+
+			// Discard 1 space character
+			instring = instring.substring(1);
+
+
+			// get the style
+
+			number = "";
+			for (count = 0; ((count < instring.length()) &&
+				 (instring.charAt(count) != ' ')); count++)
+			    number += instring.charAt(count);
+			instring = instring.substring(count);
+
+			try {
+			    style = (int) Integer.parseInt(number); 
+			} 
+			catch (NumberFormatException e) {;}
+
+			// Discard 1 space character
+			instring = instring.substring(1);
+
+
+			// get the text
+
+			text = "";
+			for (count = 0; count < instring.length(); count++)
+			    text += instring.charAt(count);
+			instring = instring.substring(count);
+
+			// Draw the text
+			canvas.drawtext(drawcolor, font, startx, starty, size,
+					style, text);
+		    }
+
+		else
+		    // Who knows what it is?  Just ignore it silently.
+		    return;
+	    }
+
+	else
+	    {
+		if (instring.startsWith("/NEWUSER "))
+		    {
+			String newuser = new String("");
+
+			instring = instring.substring(9);
+
+			for (count = 0; count < instring.length(); count ++)
+			    {
+				if (instring.charAt(count) != ' ')
+				    newuser += instring.charAt(count);
+
+				else
+				    {
+					instring = 
+					    instring.substring(count + 1);
+					break;
+				    }
+			    }
+
+			if (newuser.equals(this.name))
+			    return;
+
+			else this.sendto.addItem(newuser);
+
+			if (instring.startsWith("/MESSAGE "))
+			    {
+				instring = instring.substring(9);
+				printstring = "";
+
+				for (count = 0; count < instring.length();
+				     count ++)
+				    {
+					printstring += instring.charAt(count);
+				    }
+			    }
+
+			this.myclient.outgoing("/ADDUSER " + this.name);
+
+			this.messages.append(printstring + "\n");
+			return;
+
+		    }
+
+
+		else if (instring.startsWith("/ADDUSER "))
+		    {
+			String newuser = new String("");
+
+			instring = instring.substring(9);
+
+			for (count = 0; count < instring.length(); count ++)
+			    {           
+				newuser += instring.charAt(count);
+			    }
+
+			if (newuser.equals(this.name)) return;
+
+			for (count = 0; count < this.sendto.getItemCount();
+			     count ++)
+			    {
+				if ((this.sendto.getItem(count)).equals(newuser))
+				    return;
+			    }
+			this.sendto.addItem(newuser);
+		    }
+
+
+		else if (instring.startsWith("/REMOVEUSER "))
+		    {
+			String deaduser = instring.substring(12);
+
+			for (count = 0; count < this.sendto.getItemCount(); 
+			     count ++)
+			    {
+				if ((this.sendto.getItem(count)).equals(deaduser))
+				    this.sendto.delItem(count);
+			    }
+
+			this.messages.append("<<" + deaduser 
+						 + " is disconnecting>>\n");
+        
+			return;
+		    }
+
+		else if (instring.startsWith("/SERVERMESSAGE "))
+		    {
+			instring = instring.substring(15);
+			printstring = "";
+
+			for (count = 0; count < instring.length(); count ++)
+			    {
+				printstring += instring.charAt(count);
+			    }
+
+			Jmessagedialog theservermessage =
+			    new Jmessagedialog(this, "Server message",
+						     true, printstring);
+			return;
+		    }
+
+		else if (instring.startsWith("/SAVEDMESSAGES "))
+		    {
+			instring = instring.substring(15);
+			printstring = "";
+			String MessageFrom = new String("");
+
+			for (count = 0; ((instring.charAt(count) != '/')
+					 && (count < instring.length())); 
+			     count ++)
+			    {
+				MessageFrom += instring.charAt(count);
+			    }
+
+			instring = instring.substring(count + 4);            
+
+			for (count = 0; count < instring.length(); count ++)
+			    {
+				printstring += instring.charAt(count);
+			    }
+
+			new Jtextdialog(this, ("Message from " 
+			     + MessageFrom), printstring, 40, 10,
+			      TextArea.SCROLLBARS_VERTICAL_ONLY, true);
+			return;
+		    }
+                
+
+		// we don't know what it is, so it's probably a message
+		// from the server
+
+		else
+		    {
+			messages.append(instring + "\n");
+			return;
+		    }
+	    }
+
+	return;
+    }
+
+
+    public void online()
+    {
+	this.connected = true;
+	this.connect.setEnabled(false);
+	this.disconnect.setEnabled(true);
+	this.message.setEnabled(true);
+	this.readmess.setEnabled(true);
+	this.page.setEnabled(true);
+	this.menuleavemess.setEnabled(true);
+	this.menuviewmess.setEnabled(true);
+	this.menupage.setEnabled(true);
+	this.menuviewmess.setEnabled(true);
+	this.setTitle("OTF " + this.version + " - online at " +
+		      this.host);
+	this.canvas.image = null;
+	this.canvas.repaint();
+	return;
+    }
+
+
+    public void offline()
+    {
+	this.connected = false;
+	this.connect.setEnabled(true);
+	this.disconnect.setEnabled(false);
+	this.message.setEnabled(false);
+	this.readmess.setEnabled(false);
+	this.page.setEnabled(false);
+	this.whosthis.setEnabled(false);
+	this.menuleavemess.setEnabled(false);
+	this.menuviewmess.setEnabled(false);
+	this.menupage.setEnabled(false);
+	this.menuviewmess.setEnabled(false);
+	this.viewadditional.setEnabled(false);
+	this.sendto.removeAll();
+	this.sendto.addItem("Everyone");
+	this.sendto.select(0);
+	this.setTitle("OTF " + this.version + " - offline");
+	return;
+    }
+
+
+    private void connect()
+    {
+	// Have all the settings been entered?
+	if (this.name.equals("") ||
+	    this.host.equals("") ||
+	    this.port.equals(""))
+	    {
+		new Jsettings(this);
+
+		if (this.name.equals("") ||
+		    this.host.equals("") ||
+		    this.port.equals(""))
+		    {
+			new Jmessagedialog(this, "Information missing",
+			 true, "You are missing some required information!");
+			return;
+		    }
+	    }
+
+	// open up my socket
+	try {
+	    this.portnumber = Integer.parseInt(this.port);
+	}
+	catch (NumberFormatException n) {;}
+
+	try {
+	    myclient = new OTFclient(host, name, portnumber, this);
+	}
+	catch (IOException c) {
+	    return;
+	}
+
+	myclient.outgoing("/NEWUSER " + this.name 
+			  + " /MESSAGE <<User "
+			  + this.name + " joining chat>>\n");
+
+	this.online();
+	return;
+    }
+
+
+    protected synchronized void disconnect()
+    {
+	// send a message to everyone
+	this.myclient.outgoing("/REMOVEUSER " + this.name);
+
+	this.myclient.shutdown(false);
+	this.offline();
+	return;
+    }
+
+
+    public void actionPerformed(ActionEvent E)
+    {
+	// the menu items
+
+	if (E.getSource() == this.connect)
+	    {
+		this.connect();
+		return;
+	    }
+
+	if (E.getSource() == this.disconnect)
+	    {
+		this.disconnect();
+		return;
+	    }
+    
+	if (E.getSource() == this.buggeroff)
+	    {
+		if (this.connected == true)
+		    this.disconnect();
+		this.dispose();
+		System.exit(0);
+		return;
+	    }
+
+	// the 'page users' menu item
+	if (E.getSource() == this.menupage)
+	    {
+		this.myclient.outgoing("/FROM " + this.name + " /TO "
+				       + this.whofor + " /PAGE");
+		return;
+	    }
+
+	// the 'leave message' menu item
+	if (E.getSource() == this.menuleavemess)
+	    {
+		new Jleavemessage(this);
+		return;
+	    }
+
+	// the 'read messages' menu item
+	if (E.getSource() == this.menuviewmess)
+	    {
+		this.myclient.outgoing("/SAVEDMESSAGES");
+		return;
+	    }
+
+	// the 'clear canvas' menu item
+	if (E.getSource() == this.menuclear)
+	    {
+		this.canvas.graphics = new Vector();
+		this.canvas.image = null;
+		this.canvas.repaint();
+		if (this.connected)
+		    this.myclient.outgoing("/FROM " + this.name 
+					   + " /CLEARCANVAS");
+		return;
+	    }
+
+	if (E.getSource() == this.copy)
+	    {
+		buffer = this.messages.getSelectedText();
+		this.paste.setEnabled(true);
+		return;
+	    }
+
+	if (E.getSource() == this.paste)
+	    {
+		this.typed.setText(buffer);
+		return;
+	    }
+
+	if (E.getSource() == this.settings)
+	    {
+		new Jsettings(this);
+		return;
+	    }
+
+	// the 'who is' menu item
+	if (E.getSource() == this.viewadditional)
+	    {
+		this.myclient.outgoing("/WHOIS " + this.whofor);
+		return;
+	    }
+
+	// the 'hide canvas' menu item
+	if (E.getSource() == this.hidecanvas)
+	    {
+		this.canvas.setVisible(false);
+		this.drawcanvas.setVisible(false);
+		this.messages.setSize((this.messages.getSize()).width, 
+				      (this.messages.getSize()).height);
+		this.setSize((this.getSize()).width + 1, 
+			     (this.getSize()).height + 1);
+		this.pack();
+		this.hidecanvas.setEnabled(false);
+		this.showcanvas.setEnabled(true);
+		return;
+	    }
+
+	// the 'show canvas' menu item
+	if (E.getSource() == this.showcanvas)
+	    {
+		this.canvas.setVisible(true);
+		this.drawcanvas.setVisible(true);
+		this.setSize((this.getSize()).width + 1,
+			     (this.getSize()).height + 1);
+		this.pack();
+		this.hidecanvas.setEnabled(true);
+		this.showcanvas.setEnabled(false);
+		return;
+	    }
+
+	// the 'hide messages' menu item
+	if (E.getSource() == this.hidemessages)
+	    {
+		this.sendline.setVisible(false);
+		this.typed.setVisible(false);
+		this.conference.setVisible(false);
+		this.messages.setVisible(false);
+		this.canvas.setSize((this.canvas.getSize()).width, 
+				    (this.canvas.getSize()).height);
+		this.setSize((this.getSize()).width + 1,
+			     (this.getSize()).height + 1);
+		this.pack();
+		this.hidemessages.setEnabled(false);
+		this.showmessages.setEnabled(true);
+		return;
+	    }
+
+	// the 'show messages' menu item
+	if (E.getSource() == this.showmessages)
+	    {
+		this.sendline.setVisible(true);
+		this.typed.setVisible(true);
+		this.conference.setVisible(true);
+		this.messages.setVisible(true);
+		this.setSize((this.getSize()).width + 1,
+			     (this.getSize()).height + 1);
+		this.pack();
+		this.hidemessages.setEnabled(true);
+		this.showmessages.setEnabled(false);
+		return;
+	    }
+
+	if (E.getSource() == this.manual)
+	    {
+		try {
+		    URL manualURL = new URL(OTFURL.getProtocol(),
+				    OTFURL.getHost(),
+				    OTFURL.getFile() + "MANUAL.TXT");
+
+		    BufferedReader in = new BufferedReader(
+                                        new InputStreamReader(
+					manualURL.openStream()));
+
+		    String inputLine = new String("");
+		    String input = new String("");
+
+		    while ((inputLine = in.readLine()) != null) 
+			input = input.concat(inputLine + "\n");
+		    in.close();
+
+		    new Jtextdialog(this, "OTF Online Manual", 
+				  input, 65, 25,
+				  TextArea.SCROLLBARS_VERTICAL_ONLY, false);
+		    return;
+		}
+		catch (IOException G) {
+		    new Jmessagedialog(this, "Data not available", 
+		     true, "The MANUAL.TXT file is could not be read!");
+		    return;
+		}
+	    }
+
+	if (E.getSource() == this.about)
+	    {
+		String abouttext = new String("OTF " + this.version + "\nNEW OPERATIONAL TRANSFORMATION 2007.");
+		
+		new Jtextdialog(this, "About OTF", 
+				      abouttext, 60, 22,
+				      TextArea.SCROLLBARS_NONE, true);
+		return;
+	    }
+
+	// the 'who is' button
+	if (E.getSource() == this.whosthis)
+	    {
+		this.myclient.outgoing("/WHOIS " + this.whofor);
+		return;
+	    }
+
+	// the 'read messages' button
+	if (E.getSource() == this.readmess)
+	    {
+		this.myclient.outgoing("/SAVEDMESSAGES");
+		return;
+	    }
+
+
+	// the 'clear canvas button'
+	if (E.getSource() == this.clearcanvas)
+	    {
+		this.canvas.graphics = new Vector();
+		this.canvas.image = null;
+		this.canvas.repaint();
+		if (connected)
+		    this.myclient.outgoing("/FROM " + this.name 
+					   + " /CLEARCANVAS");
+		return;
+	    }
+
+	// the 'leave message' button
+	if (E.getSource() == this.message)
+	    {
+		new Jleavemessage(this);
+		return;
+	    }
+
+	// the 'page users' button
+	if (E.getSource() == this.page)
+	    {
+		this.myclient.outgoing("/FROM " + this.name + " /TO "
+				       + this.whofor + " /PAGE");
+		return;
+	    }
+    }
+
+    public void keyPressed(KeyEvent E)
+    {
+	if (E.getSource() == this.typed)
+	    {
+		// the 'enter' key in the send text field
+		if (E.getKeyCode() == E.VK_ENTER) 
+		    {
+			String outstring = new String("/FROM ");
+			outstring += this.name + " /TO ";
+			outstring += this.whofor;
+			outstring += " /TEXT ";
+			outstring += typed.getText();
+			messages.append(typed.getText());
+			if (this.connected == true)
+			    myclient.outgoing(outstring);
+			messages.append("\n");
+			typed.setText("");
+			return;
+		    }
+	    }
+    }
+
+    public void keyReleased(KeyEvent E)
+    {
+    }
+
+    public void keyTyped(KeyEvent E)
+    {
+    }   
+
+    public void mouseClicked(MouseEvent E)
+    {
+    }   
+
+    public void mouseEntered(MouseEvent E)
+    {
+    }   
+
+    public void mouseExited(MouseEvent E)
+    {
+    }   
+
+    public void mousePressed(MouseEvent E)
+    {
+    }   
+
+    public void mouseReleased(MouseEvent E)
+    {
+    }   
+
+    public void itemStateChanged(ItemEvent E)
+    {
+	// the 'sendto' window
+	if (E.getSource() == this.sendto)
+	    {
+		this.whofor = this.sendto.getSelectedItem();
+
+		if (this.whofor == null)
+		    return;
+		else if (this.whofor.equals("Everyone"))
+		    {
+			this.whofor = "ALL";
+			this.whosthis.setEnabled(false);
+			this.viewadditional.setEnabled(false);
+		    }
+		else
+		    {
+			this.whosthis.setEnabled(true);
+			this.viewadditional.setEnabled(true);
+		    }
+		return;
+	    }
+
+	// the fill types
+	if (E.getSource() == this.filltype)
+	    {
+		if (this.filltype.getSelectedIndex() == 0)
+		    canvas.fill = false;
+
+		if (this.filltype.getSelectedIndex() == 1)
+		    canvas.fill = true;
+
+		return;
+	    }
+
+	// the draw colors
+	if (E.getSource() == this.colorchoice)
+	    {
+		if (this.colorchoice.getSelectedIndex() == 0)
+		    {
+			canvas.drawcolor = Color.black;
+			canvas.colorstring = 
+			    canvas.makeColorString(Color.black);
+		    }
+		else if (this.colorchoice.getSelectedIndex() == 1)
+		    {
+			canvas.drawcolor = Color.blue;
+			canvas.colorstring = 
+			    canvas.makeColorString(Color.blue);
+		    }
+		else if (this.colorchoice.getSelectedIndex() == 2)
+		    {
+			canvas.drawcolor = Color.cyan;
+			canvas.colorstring = 
+			    canvas.makeColorString(Color.cyan);
+		    }
+		else if (this.colorchoice.getSelectedIndex() == 3)
+		    {
+			canvas.drawcolor = Color.darkGray;
+			canvas.colorstring = 
+			    canvas.makeColorString(Color.darkGray);
+		    }
+		else if (this.colorchoice.getSelectedIndex() == 4)
+		    {
+			canvas.drawcolor = Color.gray;
+			canvas.colorstring = 
+			    canvas.makeColorString(Color.gray);
+		    }
+		else if (this.colorchoice.getSelectedIndex() == 5)
+		    {
+			canvas.drawcolor = Color.green;
+			canvas.colorstring = 
+			    canvas.makeColorString(Color.green);
+		    }
+		else if (this.colorchoice.getSelectedIndex() == 6)
+		    {
+			canvas.drawcolor = Color.lightGray;
+			canvas.colorstring = 
+			    canvas.makeColorString(Color.lightGray);
+		    }
+		else if (this.colorchoice.getSelectedIndex() == 7)
+		    {
+			canvas.drawcolor = Color.magenta;
+			canvas.colorstring = 
+			    canvas.makeColorString(Color.magenta);
+		    }
+		else if (this.colorchoice.getSelectedIndex() == 8)
+		    {
+			canvas.drawcolor = Color.orange;
+			canvas.colorstring = 
+			    canvas.makeColorString(Color.orange);
+		    }
+		else if (this.colorchoice.getSelectedIndex() == 9)
+		    {
+			canvas.drawcolor = Color.pink;
+			canvas.colorstring = 
+			    canvas.makeColorString(Color.pink);
+		    }
+		else if (this.colorchoice.getSelectedIndex() == 10)
+		    {
+			canvas.drawcolor = Color.red;
+			canvas.colorstring = 
+			    canvas.makeColorString(Color.red);
+		    }
+		else if (this.colorchoice.getSelectedIndex() == 11)
+		    {
+			canvas.drawcolor = Color.white;
+			canvas.colorstring = 
+			    canvas.makeColorString(Color.white);
+		    }
+		else if (this.colorchoice.getSelectedIndex() == 12)
+		    {
+			canvas.drawcolor = Color.yellow;
+			canvas.colorstring = 
+			    canvas.makeColorString(Color.yellow);
+		    }
+
+		return;
+	    }            
+
+	// the draw types
+	if (E.getSource() == this.freehand)
+	    {
+		canvas.drawtype = canvas.FREEHAND;
+		this.filltype.setEnabled(false);
+		return;
+	    }
+
+	if (E.getSource() == this.line)
+	    {
+		canvas.drawtype = canvas.LINE;
+		this.filltype.setEnabled(false);
+		return;
+	    }
+
+	if (E.getSource() == this.oval)
+	    {
+		canvas.drawtype = canvas.OVAL;
+		this.filltype.setEnabled(true);
+		return;
+	    }
+
+	if (E.getSource() == this.rectangle)
+	    {
+		canvas.drawtype = canvas.RECTANGLE;
+		this.filltype.setEnabled(true);
+		return;
+	    }
+
+	if (E.getSource() == this.text)
+	    {
+		canvas.drawtype = canvas.TEXT;
+		this.filltype.setEnabled(false);
+		return;
+	    }
+    }
+
+    public void windowActivated(WindowEvent E)
+    {
+    }
+
+    public void windowClosed(WindowEvent E)
+    {
+    }
+
+    public void windowClosing(WindowEvent E)
+    {
+	if (this.connected == true)
+	    this.disconnect();
+	this.dispose();
+	System.exit(0);
+	return;
+    }
+
+    public void windowDeactivated(WindowEvent E)
+    {
+    }
+
+    public void windowDeiconified(WindowEvent E)
+    {
+    }
+
+    public void windowIconified(WindowEvent E)
+    {
+    }
+
+    public void windowOpened(WindowEvent E)
+    {
+    }
+}
+
+
