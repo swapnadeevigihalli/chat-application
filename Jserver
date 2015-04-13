@@ -85,7 +85,7 @@ public class Jserver
     protected int port;
     protected Jserverwindow mywindow;
     protected boolean graphics;
-    protected static int DEFAULTPORT = 12468;
+    protected static int DEFAULTPORT = 11456;
 
     protected ServerSocket serversocket;
     protected Socket socket;
