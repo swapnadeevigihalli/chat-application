@@ -5,7 +5,7 @@ import java.net.*;
 import java.awt.*;
 import java.util.*;
 import java.io.*;
-
+// code to create client socket
 
 class Jclientsocket
     extends Thread
