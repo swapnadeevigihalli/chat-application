@@ -34,12 +34,12 @@ public class Jwindow
     public GridBagLayout mylayout = new GridBagLayout();
     public GridBagConstraints myconstraints = new GridBagConstraints();
 
-    // socket stuff
+    // socket 
 
     public OTFclient myclient;
     protected boolean connected;
 
-    // the menu items
+    
 
     public MenuItem connect;
     public MenuItem disconnect;
@@ -64,19 +64,19 @@ public class Jwindow
     protected MenuItem about;
     protected Menu help;
  
-    // panel 1
+   
 
     protected Label sendline;
     protected Label conference;
     protected TextField typed;
     protected TextArea messages;
 
-    // panel 2
+    
 
     protected Label drawcanvas;
     public Jcanvas canvas;
 
-    // panel 3
+    
 
     protected Choice filltype;
     protected Choice colorchoice;
@@ -88,7 +88,6 @@ public class Jwindow
     protected Checkbox text;
     protected CheckboxGroup drawtype;
 
-    // panel 4
 
     protected Label namelabel;
     public Label userid;
@@ -103,7 +102,7 @@ public class Jwindow
     protected Panel p1;
     protected Panel p2;
 
-    // set up
+    
 
     public Jwindow(String userName, String hostName, String portName,
 			 boolean autoConnect, URL myURL)
@@ -118,8 +117,8 @@ public class Jwindow
 	if ((portName != null) && (!portName.equals("")))
 	    this.port = portName;
 
-	// Get the URL of the current directory, so that we can find the
-	// rest of our files.
+	
+	
 	OTFURL = myURL;
 
 	// set background color
@@ -139,12 +138,12 @@ public class Jwindow
 	this.setSize(OverallSizex,OverallSizey);
 	myconstraints.fill = myconstraints.BOTH;
 
-	// set up all of the window crap
+	
 
 	this.setLayout(mylayout);
 	myconstraints.insets = new Insets(0,5,0,5);
 
-	// the menu bar
+	
 
 	connect = new MenuItem("Connect");
 	connect.addActionListener(this);
@@ -250,7 +249,7 @@ public class Jwindow
 	menubar.setHelpMenu(help);
 	this.setMenuBar(menubar);
 
-	// the first (biggest) panel
+	
 
 	p1 = new Panel();
 	p1.setLayout(mylayout);
@@ -320,9 +319,7 @@ public class Jwindow
 	this.add(p1);
 
 	try {
-	    // messages.append(OTFURL.getProtocol() + "\n");
-	    // messages.append(OTFURL.getHost() + "\n");
-	    // messages.append(OTFURL.getFile() + "OTFpic.jpg\n");
+	    
 	    URL imageUrl =
 		new URL(OTFURL.getProtocol(), OTFURL.getHost(),
 		OTFURL.getFile() + "OTFpic.jpg");
@@ -544,14 +541,14 @@ public class Jwindow
 	addMouseListener(this);
 	addWindowListener(this);
 
-	// show the window and get going
+	
 
 	this.pack();
 	this.setVisible(true);
 	this.offline();
 	typed.requestFocus();
 
-	// Finally, are we supposed to attempt an automatic connection?
+
 	if (autoConnect == true)
 	    this.connect();
     }
@@ -569,7 +566,7 @@ public class Jwindow
 		instring = instring.substring(6);
 		this.whofrom = "";
 
-		// Get who the message/command is from
+	
 		for ( count = 0; instring.charAt(count) != ' '; count ++)
 		    whofrom += instring.charAt(count);
 		instring = instring.substring(count + 1);
@@ -643,7 +640,7 @@ public class Jwindow
 		    }
 
 
-		// if it's not that stuff, then it must be drawing stuff
+		
 
 
 		String color = new String();
@@ -752,7 +749,7 @@ public class Jwindow
 			catch (NumberFormatException e) {;}
 
 
-			// Now draw the item
+	
 
 			if (origstring.startsWith("/LINE "))
 			    canvas.drawline(drawcolor, startx, starty, paramx,
@@ -819,7 +816,7 @@ public class Jwindow
 			} 
 			catch (NumberFormatException e) {;}
 
-			// Discard 1 space character
+			
 			instring = instring.substring(1);
 
 
@@ -835,12 +832,12 @@ public class Jwindow
 			    starty = (int) Integer.parseInt(number); 
 			} 
 			catch (NumberFormatException e) {;}
-
-			// Discard 1 space character
+			
+			
 			instring = instring.substring(1);
 
 
-			// get the size
+		
 
 			number = "";
 			for (count = 0; ((count < instring.length()) &&
@@ -853,11 +850,11 @@ public class Jwindow
 			} 
 			catch (NumberFormatException e) {;}
 
-			// Discard 1 space character
+			
 			instring = instring.substring(1);
 
 
-			// get the style
+	
 
 			number = "";
 			for (count = 0; ((count < instring.length()) &&
@@ -870,24 +867,24 @@ public class Jwindow
 			} 
 			catch (NumberFormatException e) {;}
 
-			// Discard 1 space character
+			
 			instring = instring.substring(1);
 
 
-			// get the text
+			
 
 			text = "";
 			for (count = 0; count < instring.length(); count++)
 			    text += instring.charAt(count);
 			instring = instring.substring(count);
 
-			// Draw the text
+			
 			canvas.drawtext(drawcolor, font, startx, starty, size,
 					style, text);
 		    }
 
 		else
-		    // Who knows what it is?  Just ignore it silently.
+		    
 		    return;
 	    }
 
@@ -1020,8 +1017,7 @@ public class Jwindow
 		    }
                 
 
-		// we don't know what it is, so it's probably a message
-		// from the server
+		
 
 		else
 		    {
@@ -1078,7 +1074,7 @@ public class Jwindow
 
     private void connect()
     {
-	// Have all the settings been entered?
+
 	if (this.name.equals("") ||
 	    this.host.equals("") ||
 	    this.port.equals(""))
@@ -1095,7 +1091,7 @@ public class Jwindow
 		    }
 	    }
 
-	// open up my socket
+	// open up  socket
 	try {
 	    this.portnumber = Integer.parseInt(this.port);
 	}
@@ -1130,7 +1126,7 @@ public class Jwindow
 
     public void actionPerformed(ActionEvent E)
     {
-	// the menu items
+	//  menu items
 
 	if (E.getSource() == this.connect)
 	    {
@@ -1161,14 +1157,13 @@ public class Jwindow
 		return;
 	    }
 
-	// the 'leave message' menu item
 	if (E.getSource() == this.menuleavemess)
 	    {
 		new Jleavemessage(this);
 		return;
 	    }
 
-	// the 'read messages' menu item
+	
 	if (E.getSource() == this.menuviewmess)
 	    {
 		this.myclient.outgoing("/SAVEDMESSAGES");
@@ -1206,14 +1201,14 @@ public class Jwindow
 		return;
 	    }
 
-	// the 'who is' menu item
+	
 	if (E.getSource() == this.viewadditional)
 	    {
 		this.myclient.outgoing("/WHOIS " + this.whofor);
 		return;
 	    }
 
-	// the 'hide canvas' menu item
+	
 	if (E.getSource() == this.hidecanvas)
 	    {
 		this.canvas.setVisible(false);
@@ -1228,7 +1223,7 @@ public class Jwindow
 		return;
 	    }
 
-	// the 'show canvas' menu item
+	
 	if (E.getSource() == this.showcanvas)
 	    {
 		this.canvas.setVisible(true);
@@ -1240,8 +1235,7 @@ public class Jwindow
 		this.showcanvas.setEnabled(false);
 		return;
 	    }
-
-	// the 'hide messages' menu item
+	
 	if (E.getSource() == this.hidemessages)
 	    {
 		this.sendline.setVisible(false);
@@ -1258,7 +1252,7 @@ public class Jwindow
 		return;
 	    }
 
-	// the 'show messages' menu item
+	
 	if (E.getSource() == this.showmessages)
 	    {
 		this.sendline.setVisible(true);
@@ -1313,7 +1307,7 @@ public class Jwindow
 		return;
 	    }
 
-	// the 'who is' button
+	
 	if (E.getSource() == this.whosthis)
 	    {
 		this.myclient.outgoing("/WHOIS " + this.whofor);
@@ -1328,7 +1322,7 @@ public class Jwindow
 	    }
 
 
-	// the 'clear canvas button'
+
 	if (E.getSource() == this.clearcanvas)
 	    {
 		this.canvas.graphics = new Vector();
@@ -1340,14 +1334,14 @@ public class Jwindow
 		return;
 	    }
 
-	// the 'leave message' button
+	
 	if (E.getSource() == this.message)
 	    {
 		new Jleavemessage(this);
 		return;
 	    }
 
-	// the 'page users' button
+	
 	if (E.getSource() == this.page)
 	    {
 		this.myclient.outgoing("/FROM " + this.name + " /TO "
@@ -1360,7 +1354,7 @@ public class Jwindow
     {
 	if (E.getSource() == this.typed)
 	    {
-		// the 'enter' key in the send text field
+	
 		if (E.getKeyCode() == E.VK_ENTER) 
 		    {
 			String outstring = new String("/FROM ");
@@ -1408,7 +1402,7 @@ public class Jwindow
 
     public void itemStateChanged(ItemEvent E)
     {
-	// the 'sendto' window
+
 	if (E.getSource() == this.sendto)
 	    {
 		this.whofor = this.sendto.getSelectedItem();
@@ -1429,7 +1423,7 @@ public class Jwindow
 		return;
 	    }
 
-	// the fill types
+	
 	if (E.getSource() == this.filltype)
 	    {
 		if (this.filltype.getSelectedIndex() == 0)
@@ -1441,7 +1435,7 @@ public class Jwindow
 		return;
 	    }
 
-	// the draw colors
+	
 	if (E.getSource() == this.colorchoice)
 	    {
 		if (this.colorchoice.getSelectedIndex() == 0)
