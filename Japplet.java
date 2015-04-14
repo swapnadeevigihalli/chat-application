@@ -10,7 +10,7 @@ public class Japplet
 {
    
  // This is just a simple applet wrapper class to allow OTF Chat
-    // clients to be embedded in HTML documents.
+    
 
  
    private Jwindow window;
@@ -65,8 +65,7 @@ String[][] args = {
     
 {
 	
-// Get the user name, host name, and port from the launching
-	// document, if specified.
+
 
 	this.name = this.getParameter("username");
 
@@ -79,10 +78,7 @@ if (this.getParameter("autoconnect").equals("yes"))
 	    this.autoconnect = true;
 
 	
-// If "username" is blank, that's OK -- it's probably a deliberate
-	// attempt to get the user to enter a unique one later.  However,
-	// if it other two values are blank, we'll supply some default ones
-	// here
+
 
 	if ((host == null) || host.equals(""))
 	  
@@ -92,7 +88,7 @@ if ((port == null) || port.equals(""))
 	 
    this.port = "12468";
 
-	// Done
+	
 	return;
   
   }
@@ -102,12 +98,12 @@ if ((port == null) || port.equals(""))
     
 {
 	
-// Launch a window.  It will show up as an unsigned applet window.
+
 
 	this.window = new Jwindow(this.name, this.host, this.port,
 					this.autoconnect, this.getCodeBase());
 
-// Done
+
 	return;
  
    }
@@ -141,9 +137,7 @@ return;
 }
 
 
-/*
-  <applet code=OTFapplet width=300 height=300> </applet>
- */
+
 
 
 
