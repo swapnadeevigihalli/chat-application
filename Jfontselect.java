@@ -265,7 +265,7 @@ public class Jfontselect
     {
 	myparent.drawtext = text.getText();
 
-	// send it out to the socket
+	
 
 	if (myparent.connected)
 	    myparent.myclient.outgoing("/FROM " + myparent.name 
