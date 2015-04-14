@@ -34,7 +34,7 @@ class Jclientsocket
 	location = new String ("Location");
 	additional = new String ("None");
 
-	// set up the streams
+	
 
 	try {
 	    istream = new BufferedReader(new 
@@ -52,7 +52,7 @@ class Jclientsocket
 	    System.exit(1);
 	}
 
-	// Send welcome message
+	
 	this.myoutput("Welcome to OTF chat.");
 	if (myparent.connections.size() == 0) 
 	    myoutput("You are the first user on line.");
@@ -75,10 +75,7 @@ class Jclientsocket
 
 	while (true)
 	    {
-		// We do this once every loop, so that we don't suck up
-		// too many resources.  It's at the start of the loop here
-		// since parts of code inside this loop have 'continue'
-		// statements
+		
 		yield();
 
 		line = null;
@@ -96,41 +93,33 @@ class Jclientsocket
 		}
 
 
-		// Now we examine the message being passed, and determine
-		// what to do with it.
-
-		
-		// Is this message a text message or drawing data?
-
+	
 		if (line.startsWith("/FROM "))
 		    {
 			String tmpLine = new String(line);
 			// Discard the FROM
 			tmpLine = tmpLine.substring(6);
 
-			// Discard the 'from' name and the space after it.
+			
 			for (count = 0; tmpLine.charAt(count) != ' ';
 			     count ++);
 			tmpLine = tmpLine.substring(count + 1);
 
-			// Is this message for anyone in particular?
+			
 			if (tmpLine.startsWith("/TO "))
 			    {
-				// Discard the "/TO "
+				
 				tmpLine = tmpLine.substring(4);
 
-				// Is this message for everybody?
+				
 				if (tmpLine.startsWith("ALL"))
 				    {
-					// Send it to all the clients
+					
 					myparent.thewriter.clientoutput(line);
 					continue;
 				    }
 
-				// It's a private message.  We have to
-				// figure out who it's for.  Loop through all
-				// of the currently connected clients,
-				// looking for one whose name matches
+				
 
 				for (count = 0;
 				     count < myparent.connections.size();
@@ -141,13 +130,12 @@ class Jclientsocket
 					     myparent.connections.elementAt(count));
 				
 					if (temp == null)
-					    // Oops
+					 
 					    continue;
 
 					else if (tmpLine.startsWith(temp.username))
 					    {
-						// Send the message only to
-						// the intended recipient.
+						
 						temp.myoutput(line);
 					    }
 				    }
@@ -162,7 +150,7 @@ class Jclientsocket
 		if (line.startsWith("/NEWUSER ") || 
 		    line.startsWith("/ADDUSER "))
 		    {
-			// Just send it to all the clients
+			
 			myparent.thewriter.clientoutput(line);
 			continue;
 		    }
@@ -173,7 +161,7 @@ class Jclientsocket
 		    }
 
 
-		// Otherwise, this message is only for the server
+		
 
 
 		if (line.startsWith("/WHOIS "))
@@ -286,9 +274,7 @@ class Jclientsocket
 			Jmessage tempmessage;
 			line = line.substring(6);
 
-			// Make sure we don't already have a user by the
-			// same name.  Loop through all of the currently
-			// connected users
+			
 			for (int count = 0;
 			     count < myparent.connections.size();
 			     count ++)
@@ -362,10 +348,7 @@ class Jclientsocket
 			continue;
 		    }
 
-		// If we don't understand the message, we will silently
-		// ignore it.  This might be because the client is of
-		// a more recent version than this server, and sends some
-		// directive that this version doesn't know about.
+	
 		continue;
 	    }
     }
